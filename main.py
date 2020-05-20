@@ -47,12 +47,20 @@ ir_transmitter = IRTransmitter(Pin(TRANSMITTER_PIN))
 spi = SPI(sck=Pin(TinyPICO.DOTSTAR_CLK),
           mosi=Pin(TinyPICO.DOTSTAR_DATA),
           miso=Pin(TinyPICO.SPI_MISO))
-dotstar = DotStar(spi, 1, brightness=0.5)
+dotstar = DotStar(spi, 1, brightness=0.0)
 dotstar[0] = (0, 188, 255, 0.5)
 TinyPICO.set_dotstar_power(True)
 
 while True:
     ir_transmitter.play(ir_code.POWER_ON)
+
+    for i in range(4):
+        dotstar.brightness = 0.5
+        time.sleep(0.05)
+        dotstar.brightness = 0
+        time.sleep(0.05)
+
+
     time.sleep(2)
 
 
