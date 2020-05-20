@@ -8,7 +8,8 @@ import secret
 import machine
 import ir_code
 
-from machine import Pin, PWM, ADC, TouchPad, RTC
+from machine import Pin, PWM, ADC, TouchPad, RTC, SPI
+from dotstar import DotStar
 
 
 TRANSMITTER_PIN = 25
@@ -42,6 +43,13 @@ class IRTransmitter:
 
 
 ir_transmitter = IRTransmitter(Pin(TRANSMITTER_PIN))
+
+spi = SPI(sck=Pin(TinyPICO.DOTSTAR_CLK),
+          mosi=Pin(TinyPICO.DOTSTAR_DATA),
+          miso=Pin(TinyPICO.SPI_MISO))
+dotstar = DotStar(spi, 1, brightness=0.5)
+dotstar[0] = (0, 188, 255, 0.5)
+TinyPICO.set_dotstar_power(True)
 
 while True:
     ir_transmitter.play(ir_code.POWER_ON)
