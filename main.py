@@ -30,7 +30,6 @@ class IRTransmitter:
 
     def play(self, code):
         send_pulse = True
-        test = 0
 
         for i in code:
             if send_pulse:
