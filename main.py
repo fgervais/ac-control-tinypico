@@ -6,14 +6,50 @@ import esp32
 import blynklib_mp as blynklib
 import secret
 import machine
+import ir_code
 
 from machine import Pin, PWM, ADC, TouchPad, RTC
 
 
 TRANSMITTER_PIN = 25
 
-ir_transmitter = PWM(Pin(TRANSMITTER_PIN), freq=38000, duty=0)
-ir_transmitter.duty(512)
+
+class IRTransmitter:
+    def __init__(self, pin):
+        self.pwm_pin = PWM(pin, freq=38000, duty=0)
+
+    def pulse(self, length_us):
+        self.pwm_pin.duty(512)
+        time.sleep_us(length_us)
+        self.pwm_pin.duty(0)
+
+    def space(self, length_us):
+        self.pwm_pin.duty(0)
+        time.sleep_us(length_us)
+
+    def play(self, code):
+        send_pulse = True
+        test = 0
+
+        for i in code:
+            if send_pulse:
+                self.pulse(i)
+            else:
+                self.space(i)
+
+            send_pulse = not send_pulse
+
+
+
+ir_transmitter = IRTransmitter(Pin(TRANSMITTER_PIN))
+
+while True:
+    ir_transmitter.play(ir_code.POWER_ON)
+    time.sleep(2)
+
+
+# ir_transmitter = PWM(Pin(TRANSMITTER_PIN), freq=38000, duty=0)
+# ir_transmitter.duty(512)
 
 
 
