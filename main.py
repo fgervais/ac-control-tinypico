@@ -50,17 +50,21 @@ dotstar = DotStar(spi, 1, brightness=0.0)
 dotstar[0] = (0, 188, 255, 0.5)
 TinyPICO.set_dotstar_power(True)
 
+button = Pin(33, Pin.IN)
+
 while True:
-    ir_transmitter.play(ir_code.POWER_ON)
+    # ir_transmitter.play(ir_code.POWER_ON)
 
-    for i in range(4):
-        dotstar.brightness = 0.5
-        time.sleep(0.05)
-        dotstar.brightness = 0
-        time.sleep(0.05)
+    if button.value() == 0:
+
+        for i in range(4):
+            dotstar.brightness = 0.5
+            time.sleep(0.05)
+            dotstar.brightness = 0
+            time.sleep(0.05)
 
 
-    time.sleep(2)
+    # time.sleep(2)
 
 
 # ir_transmitter = PWM(Pin(TRANSMITTER_PIN), freq=38000, duty=0)
