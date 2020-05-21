@@ -40,6 +40,13 @@ class IRTransmitter:
             send_pulse = not send_pulse
 
 
+def show_feedback():
+    for i in range(4):
+        dotstar.brightness = 0.5
+        time.sleep(0.05)
+        dotstar.brightness = 0
+        time.sleep(0.05)
+
 
 ir_transmitter = IRTransmitter(Pin(TRANSMITTER_PIN))
 
@@ -53,15 +60,11 @@ TinyPICO.set_dotstar_power(True)
 button = Pin(33, Pin.IN)
 
 while True:
-    # ir_transmitter.play(ir_code.POWER_ON)
 
     if button.value() == 0:
+        ir_transmitter.play(ir_code.POWER_ON)
+        show_feedback()
 
-        for i in range(4):
-            dotstar.brightness = 0.5
-            time.sleep(0.05)
-            dotstar.brightness = 0
-            time.sleep(0.05)
 
 
     # time.sleep(2)
