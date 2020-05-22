@@ -14,6 +14,11 @@ from dotstar import DotStar
 
 TRANSMITTER_PIN = 25
 
+LED_BRIGHTNESS = 0.5
+
+BUTTON_VPIN = 0
+LED_VPIN = 1
+
 
 class IRTransmitter:
     def __init__(self, pin):
@@ -52,7 +57,7 @@ def connect():
 
 def show_feedback():
     for i in range(4):
-        dotstar.brightness = 0.5
+        dotstar.brightness = LED_BRIGHTNESS
         time.sleep(0.05)
         dotstar.brightness = 0
         time.sleep(0.05)
@@ -67,11 +72,12 @@ spi = SPI(sck=Pin(TinyPICO.DOTSTAR_CLK),
 dotstar = DotStar(spi, 1, brightness=0.0)
 dotstar[0] = (0, 188, 255, 0.5)
 TinyPICO.set_dotstar_power(True)
+syncing = True
 
 connect()
 blynk = blynklib.Blynk(secret.BLYNK_AUTH, log=print)
 
-@blynk.handle_event("write V0")
+@blynk.handle_event("write V" + str(BUTTON_VPIN))
 def write_handler(pin, value):
     if int(value[0]) == 1:
         # ir_transmitter.play(ir_code.POWER_ON)
@@ -82,6 +88,20 @@ def write_handler(pin, value):
 
     show_feedback()
 
+@blynk.handle_event("write V" + str(LED_VPIN))
+def write_handler(pin, value):
+    dotstar[0] = tuple(map(int, value))
+
+    if not syncing:
+        dotstar.brightness = LED_BRIGHTNESS
+        time.sleep(1)
+        dotstar.brightness = 0.0
+
+
+blynk.run()
+blynk.virtual_sync(LED_VPIN)
+blynk.run()
+syncing = False
 
 while True:
     blynk.run()
