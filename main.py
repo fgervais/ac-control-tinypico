@@ -40,6 +40,16 @@ class IRTransmitter:
             send_pulse = not send_pulse
 
 
+def connect():
+    wlan.active(True)
+    if not wlan.isconnected():
+        print('connecting to network...')
+        wlan.connect(secret.ESSID, secret.PSK)
+        while not wlan.isconnected():
+            time.sleep(1)
+    print('network config:', wlan.ifconfig())
+
+
 def show_feedback():
     for i in range(4):
         dotstar.brightness = 0.5
@@ -48,7 +58,11 @@ def show_feedback():
         time.sleep(0.05)
 
 
+
+
+
 ir_transmitter = IRTransmitter(Pin(TRANSMITTER_PIN))
+wlan = network.WLAN(network.STA_IF)
 
 spi = SPI(sck=Pin(TinyPICO.DOTSTAR_CLK),
           mosi=Pin(TinyPICO.DOTSTAR_DATA),
@@ -59,14 +73,18 @@ TinyPICO.set_dotstar_power(True)
 
 button = Pin(33, Pin.IN)
 
-while True:
+connect()
+blynk = blynklib.Blynk(secret.BLYNK_AUTH, log=print)
 
-    if button.value() == 0:
-        ir_transmitter.play(ir_code.POWER_ON)
+@blynk.handle_event('write V0')
+def write_handler(pin, value):
+    # ir_transmitter.play(ir_code.POWER_ON)
+    print("value: " + str(value))
+    if int(value[0]) == 1:
         show_feedback()
 
-
-
+while True:
+    blynk.run()
     # time.sleep(2)
 
 
