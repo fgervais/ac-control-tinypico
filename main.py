@@ -80,11 +80,9 @@ blynk = blynklib.Blynk(secret.BLYNK_AUTH, log=print)
 @blynk.handle_event("write V" + str(BUTTON_VPIN))
 def write_handler(pin, value):
     if int(value[0]) == 1:
-        # ir_transmitter.play(ir_code.POWER_ON)
-        pass
+        ir_transmitter.play(ir_code.POWER_ON)
     else:
-        # ir_transmitter.play(ir_code.POWER_OFF)
-        pass
+        ir_transmitter.play(ir_code.POWER_OFF)
 
     show_feedback()
 
