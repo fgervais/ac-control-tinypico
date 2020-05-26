@@ -13,6 +13,10 @@ from dotstar import DotStar
 
 
 TRANSMITTER_PIN = 25
+BUTTON_TOUCHPAD_PIN = 33
+
+BUTTON_CAP_THRESHOLD = 100
+BUTTON_COOLDOWN_SEC = 3
 
 LED_BRIGHTNESS = 0.5
 
@@ -63,6 +67,8 @@ def show_feedback():
         time.sleep(0.05)
 
 
+button_pad = TouchPad(Pin(BUTTON_TOUCHPAD_PIN))
+
 ir_transmitter = IRTransmitter(Pin(TRANSMITTER_PIN))
 wlan = network.WLAN(network.STA_IF)
 
@@ -72,18 +78,28 @@ spi = SPI(sck=Pin(TinyPICO.DOTSTAR_CLK),
 dotstar = DotStar(spi, 1, brightness=0.0)
 dotstar[0] = (0, 188, 255, 0.5)
 TinyPICO.set_dotstar_power(True)
+
 syncing = True
+ac_on = None
+button_cooldown_time = 0
 
 connect()
 blynk = blynklib.Blynk(secret.BLYNK_AUTH, log=print)
 
 @blynk.handle_event("write V" + str(BUTTON_VPIN))
 def write_handler(pin, value):
-    if int(value[0]) == 1:
+    global ac_on
+
+    if ac_on is None:
+        ac_on = True if int(value[0]) == 1 else False
+        return
+
+    if int(value[0]) == 1 and not ac_on:
         ir_transmitter.play(ir_code.POWER_ON)
-    else:
+    elif int(value[0]) == 0 and ac_on:
         ir_transmitter.play(ir_code.POWER_OFF)
 
+    ac_on = not ac_on
     show_feedback()
 
 @blynk.handle_event("write V" + str(LED_VPIN))
@@ -97,9 +113,26 @@ def write_handler(pin, value):
 
 
 blynk.run()
+blynk.virtual_sync(BUTTON_VPIN)
 blynk.virtual_sync(LED_VPIN)
 blynk.run()
 syncing = False
 
+print("AC " + ("ON" if ac_on else "OFF"))
+
 while True:
     blynk.run()
+
+    if (button_pad.read() < BUTTON_CAP_THRESHOLD
+            and time.time() > button_cooldown_time):
+        if ac_on:
+            ir_transmitter.play(ir_code.POWER_OFF)
+            blynk.virtual_write(BUTTON_VPIN, 0)
+        else:
+            ir_transmitter.play(ir_code.POWER_ON)
+            blynk.virtual_write(BUTTON_VPIN, 1)
+
+        button_cooldown_time = time.time() + BUTTON_COOLDOWN_SEC
+
+        ac_on = not ac_on
+        show_feedback()
